@@ -1,0 +1,1675 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <!-- =====================================================
+         BASIC SETTINGS
+    ====================================================== -->
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="description" content="RenderRCars - Premium car rental experience">
+
+    <meta name="author" content="RenderRCars">
+
+    <title>RenderRCars | Drive Beyond Limits</title>
+
+
+    <!-- =====================================================
+         CSS
+    ====================================================== -->
+
+    <link rel="stylesheet" href="rent.css">
+
+</head>
+
+
+<body>
+
+
+    <!-- =====================================================
+         BACKGROUND
+    ====================================================== -->
+
+    <div class="bg-grid"></div>
+
+    <div class="glow glow-red"></div>
+
+    <div class="glow glow-blue"></div>
+
+
+
+    <!-- =====================================================
+         NAVBAR
+    ====================================================== -->
+
+    <header class="navbar">
+
+
+        <!-- LOGO -->
+
+        <div class="brand">
+
+            <a href="#home">
+
+                <img src="pictures/logo.png" alt="RenderRCars Logo">
+
+            </a>
+
+        </div>
+
+
+
+        <!-- NAVIGATION -->
+
+        <nav class="nav-links">
+
+
+            <!-- HOME -->
+
+            <a href="#home" class="nav-item active">
+
+                <img src="pictures/home.ico" alt="Home">
+
+                <span>Home</span>
+
+            </a>
+
+
+
+            <!-- CARS -->
+
+            <a href="#cars" class="nav-item">
+
+                <img src="pictures/icon multilevel.ico" alt="Cars">
+
+                <span>Cars</span>
+
+            </a>
+
+
+
+            <!-- DEALS -->
+
+            <a href="#deals" class="nav-item">
+
+                <span class="nav-icon-text">%</span>
+
+                <span>Deals</span>
+
+            </a>
+
+
+
+            <!-- ABOUT -->
+
+            <a href="#about" class="nav-item">
+
+                <span class="nav-icon-text">i</span>
+
+                <span>About</span>
+
+            </a>
+
+
+        </nav>
+
+
+
+        <!-- =================================================
+             SEARCH
+        ================================================== -->
+
+        <div class="search-container">
+
+
+            <img src="pictures/search.ico" alt="Search" class="search-icon">
+
+
+            <input type="text" id="searchInput" placeholder="Search your dream car...">
+
+
+            <button type="button" onclick="searchCars()" aria-label="Search cars">
+
+                <span>→</span>
+
+            </button>
+
+
+        </div>
+
+
+
+        <!-- =================================================
+             RIGHT NAVIGATION
+        ================================================== -->
+
+        <div class="nav-actions">
+
+
+            <!-- QUICK ACTION -->
+
+            <button class="icon-button" type="button" title="Quick action">
+
+                ⚡
+
+            </button>
+
+
+
+            <!-- SETTINGS -->
+
+            <button class="icon-button" type="button" title="Settings">
+
+                <img src="pictures/setting.ico" alt="Settings">
+
+            </button>
+
+
+
+            <!-- LOGIN -->
+
+            <a href="login.html" class="icon-button" title="Login">
+                <button class="login-button" type="button" onclick="openLogin()">
+                    LOGIN
+
+                </button>
+            </a>
+
+
+
+
+
+
+        </div>
+
+
+    </header>
+
+
+
+    <!-- =====================================================
+         MAIN
+    ====================================================== -->
+
+    <main>
+
+
+
+        <!-- =================================================
+             HERO SECTION
+        ================================================== -->
+
+        <section class="hero" id="home">
+
+
+            <!-- HERO TEXT -->
+
+            <div class="hero-content">
+
+
+                <div class="small-title">
+
+                    <span></span>
+
+                    PREMIUM CAR EXPERIENCE
+
+                    <span></span>
+
+                </div>
+
+
+
+                <h1>
+
+                    DRIVE
+
+                    <strong>BEYOND</strong>
+
+                    LIMITS
+
+                </h1>
+
+
+
+                <p class="hero-description">
+
+                    Experience powerful machines,
+                    premium luxury and unforgettable drives.
+
+                </p>
+
+
+
+                <!-- HERO BUTTONS -->
+
+                <div class="hero-buttons">
+
+
+                    <button class="primary-btn" type="button" onclick="scrollToCars()">
+
+                        EXPLORE CARS
+
+                        <span>→</span>
+
+                    </button>
+
+
+
+                    <button class="secondary-btn" type="button" onclick="playExperience()">
+
+                        <span>▶</span>
+
+                        WATCH EXPERIENCE
+
+                    </button>
+
+
+                </div>
+
+
+
+                <!-- STATISTICS -->
+
+                <div class="stats">
+
+
+                    <div class="stat">
+
+                        <strong>500+</strong>
+
+                        <span>Cars</span>
+
+                    </div>
+
+
+
+                    <div class="stat">
+
+                        <strong>50K+</strong>
+
+                        <span>Customers</span>
+
+                    </div>
+
+
+
+                    <div class="stat">
+
+                        <strong>4.9</strong>
+
+                        <span>Rating ⭐</span>
+
+                    </div>
+
+
+                </div>
+
+
+            </div>
+
+
+
+            <!-- HERO LOGO / CAR AREA -->
+
+            <div class="hero-car">
+
+
+                <div class="hero-ring"></div>
+
+
+                <img src="pictures/logo.png" alt="RenderRCars">
+
+
+
+                <div class="floating-card card-speed">
+
+                    <span>MAX SPEED</span>
+
+                    <strong>320 KM/H</strong>
+
+                </div>
+
+
+
+                <div class="floating-card card-power">
+
+                    <span>ENGINE</span>
+
+                    <strong>V8 TURBO</strong>
+
+                </div>
+
+
+            </div>
+
+
+        </section>
+
+
+
+        <!-- =================================================
+             RENTAL SEARCH PANEL
+        ================================================== -->
+
+        <section class="search-panel">
+
+
+            <div class="search-title">
+
+                <span>01</span>
+
+                <strong>FIND YOUR RIDE</strong>
+
+            </div>
+
+
+
+            <div class="search-fields">
+
+
+                <!-- LOCATION -->
+
+                <div class="field">
+
+
+                    <label for="location">
+
+                        LOCATION
+
+                    </label>
+
+
+
+                    <select id="location">
+
+                        <option>
+                            Vijayawada
+                        </option>
+
+                        <option>
+                            Hyderabad
+                        </option>
+
+                        <option>
+                            Bangalore
+                        </option>
+
+                        <option>
+                            Chennai
+                        </option>
+
+                        <option>
+                            Delhi
+                        </option>
+
+                        <option>
+                            Mumbai
+                        </option>
+
+                    </select>
+
+
+                </div>
+
+
+
+                <!-- PICKUP -->
+
+                <div class="field">
+
+
+                    <label for="pickupDate">
+
+                        PICKUP DATE
+
+                    </label>
+
+
+
+                    <input type="date" id="pickupDate">
+
+
+                </div>
+
+
+
+                <!-- RETURN -->
+
+                <div class="field">
+
+
+                    <label for="returnDate">
+
+                        RETURN DATE
+
+                    </label>
+
+
+
+                    <input type="date" id="returnDate">
+
+
+                </div>
+
+
+
+                <!-- FIND -->
+
+                <button class="search-rent-btn" type="button" onclick="scrollToCars()">
+
+                    FIND CARS
+
+                    <span>→</span>
+
+                </button>
+
+
+            </div>
+
+
+        </section>
+
+
+
+        <!-- =================================================
+             VIDEO SECTION
+        ================================================== -->
+
+        <section class="video-section">
+
+
+            <div class="section-label">
+
+                EXPERIENCE THE MACHINE
+
+            </div>
+
+
+
+            <h2>
+
+                FEEL THE
+
+                <span>POWER</span>
+
+            </h2>
+
+
+
+            <div class="video-wrapper">
+
+
+                <video id="carVideo" autoplay muted loop playsinline controls>
+
+                    <source src="pictures/videoplayback (3).webm" type="video/mp4">
+
+                    Your browser does not support video.
+
+                </video>
+
+
+
+                <div class="video-gradient"></div>
+
+
+
+                <div class="video-content">
+
+
+                    <div class="video-tag">
+
+                        RENDER EXPERIENCE
+
+                    </div>
+
+
+
+                    <h3>
+
+                        YOUR ROAD.
+
+                        <br>
+
+                        YOUR RULES.
+
+                    </h3>
+
+
+
+                    <button class="primary-btn" type="button" onclick="scrollToCars()">
+
+                        START YOUR JOURNEY
+
+                        <span>→</span>
+
+                    </button>
+
+
+                </div>
+
+
+            </div>
+
+
+        </section>
+
+
+
+        <!-- =================================================
+             CATEGORIES
+        ================================================== -->
+
+        <section class="categories">
+
+
+            <div class="section-top">
+
+
+                <div>
+
+
+                    <div class="section-label">
+
+                        SELECT YOUR STYLE
+
+                    </div>
+
+
+
+                    <h2>
+
+                        CAR
+
+                        <span>CATEGORIES</span>
+
+                    </h2>
+
+
+                </div>
+
+
+            </div>
+
+
+
+            <div class="category-grid">
+
+
+                <!-- SPORTS -->
+
+                <button type="button" onclick="filterCategory('sports')">
+
+                    <div class="category-icon">
+
+                        🏎️
+
+                    </div>
+
+
+                    <strong>
+
+                        SPORTS
+
+                    </strong>
+
+
+                    <small>
+
+                        Speed Machines
+
+                    </small>
+
+                </button>
+
+
+
+                <!-- LUXURY -->
+
+                <button type="button" onclick="filterCategory('luxury')">
+
+                    <div class="category-icon">
+
+                        💎
+
+                    </div>
+
+
+                    <strong>
+
+                        LUXURY
+
+                    </strong>
+
+
+                    <small>
+
+                        Premium Experience
+
+                    </small>
+
+                </button>
+
+
+
+                <!-- SUV -->
+
+                <button type="button" onclick="filterCategory('suv')">
+
+                    <div class="category-icon">
+
+                        🚙
+
+                    </div>
+
+
+                    <strong>
+
+                        SUV
+
+                    </strong>
+
+
+                    <small>
+
+                        Power & Adventure
+
+                    </small>
+
+                </button>
+
+
+
+                <!-- SEDAN -->
+
+                <button type="button" onclick="filterCategory('sedan')">
+
+                    <div class="category-icon">
+
+                        🚘
+
+                    </div>
+
+
+                    <strong>
+
+                        SEDAN
+
+                    </strong>
+
+
+                    <small>
+
+                        Comfort & Style
+
+                    </small>
+
+                </button>
+
+
+            </div>
+
+
+        </section>
+
+
+
+        <!-- =================================================
+             CAR COLLECTION
+        ================================================== -->
+
+        <section class="cars-section" id="cars">
+
+
+            <div class="section-top">
+
+
+                <div>
+
+
+                    <div class="section-label">
+
+                        GARAGE COLLECTION
+
+                    </div>
+
+
+
+                    <h2>
+
+                        CHOOSE YOUR
+
+                        <span>BEAST</span>
+
+                    </h2>
+
+
+                </div>
+
+
+
+                <button class="view-all" type="button" onclick="showAllCars()">
+
+                    VIEW ALL →
+
+                </button>
+
+
+            </div>
+
+
+
+            <div class="car-grid" id="carGrid">
+
+
+                <!-- =================================================
+                     BMW M4
+                ================================================== -->
+
+                <article class="car-card" data-name="BMW M4" data-category="sports">
+
+
+                    <div class="car-image">
+
+
+                        <span class="car-tag">
+
+                            HOT
+
+                        </span>
+
+
+
+                        <img src="https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=1000&q=85"
+                            alt="BMW M4" loading="lazy">
+
+
+                    </div>
+
+
+
+                    <div class="car-info">
+
+
+                        <div class="car-top">
+
+
+                            <div>
+
+                                <h3>
+
+                                    BMW M4
+
+                                </h3>
+
+
+                                <span>
+
+                                    SPORTS COUPE
+
+                                </span>
+
+                            </div>
+
+
+
+                            <div class="rating">
+
+                                ★★★★★
+
+                                <small>
+
+                                    4.9
+
+                                </small>
+
+                            </div>
+
+
+                        </div>
+
+
+
+                        <div class="specs">
+
+                            <span>⚡ 503 HP</span>
+
+                            <span>⚙ AUTO</span>
+
+                            <span>👤 4</span>
+
+                        </div>
+
+
+
+                        <div class="price-row">
+
+
+                            <div>
+
+                                <small>FROM</small>
+
+                                <strong>
+
+                                    ₹1,000
+
+                                </strong>
+
+                                <span>
+
+                                    /DAY
+
+                                </span>
+
+                            </div>
+
+
+                            <a href="payment.html" target="_blank" rel="Cargrid" class="rent-button"
+                                onclick="rentCar('BMW M4', 4999)">
+
+                                <button type="button" onclick="rentCar('BMW M4',4999)">
+
+                                    RENT →
+
+                                </button>
+                            </a>
+
+
+
+                        </div>
+
+
+                    </div>
+
+
+                </article>
+
+
+
+                <!-- =================================================
+                     TOYOTA FORTUNER
+                ================================================== -->
+
+                <article class="car-card" data-name="Toyota Fortuner" data-category="suv">
+
+
+                    <div class="car-image">
+
+
+                        <span class="car-tag">
+
+                            POPULAR
+
+                        </span>
+
+
+
+                        <img src="https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?auto=format&fit=crop&w=1000&q=85"
+                            alt="Toyota Fortuner" loading="lazy">
+
+
+                    </div>
+
+
+
+                    <div class="car-info">
+
+
+                        <div class="car-top">
+
+
+                            <div>
+
+                                <h3>
+
+                                    FORTUNER
+
+                                </h3>
+
+
+                                <span>
+
+                                    PREMIUM SUV
+
+                                </span>
+
+                            </div>
+
+
+
+                            <div class="rating">
+
+                                ★★★★☆
+
+                                <small>
+
+                                    4.7
+
+                                </small>
+
+                            </div>
+
+
+                        </div>
+
+
+
+                        <div class="specs">
+
+                            <span>⚡ 201 HP</span>
+
+                            <span>⚙ AUTO</span>
+
+                            <span>👤 7</span>
+
+                        </div>
+
+
+
+                        <div class="price-row">
+
+
+                            <div>
+
+                                <small>FROM</small>
+
+                                <strong>
+
+                                    ₹1,000
+
+                                </strong>
+
+                                <span>/DAY</span>
+
+                            </div>
+
+
+                            <a href="payment.html" class="cargrid" onclick="button"> <button type="button"
+                                    onclick="rentCar('Toyota Fortuner',3499)">
+
+                                    RENT →
+
+                                </button>
+                            </a>
+
+
+                        </div>
+
+
+                    </div>
+
+
+                </article>
+
+
+
+                <!-- =================================================
+                     AUDI R8
+                ================================================== -->
+
+                <article class="car-card" data-name="Audi R8" data-category="sports">
+
+
+                    <div class="car-image">
+
+
+                        <span class="car-tag">
+
+                            ELITE
+
+                        </span>
+
+
+
+                        <img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1000&q=85"
+                            alt="Audi R8" loading="lazy">
+
+
+                    </div>
+
+
+
+                    <div class="car-info">
+
+
+                        <div class="car-top">
+
+
+                            <div>
+
+                                <h3>
+
+                                    AUDI R8
+
+                                </h3>
+
+
+                                <span>
+
+                                    SUPERCAR
+
+                                </span>
+
+                            </div>
+
+
+
+                            <div class="rating">
+
+                                ★★★★★
+
+                                <small>
+
+                                    5.0
+
+                                </small>
+
+                            </div>
+
+
+                        </div>
+
+
+
+                        <div class="specs">
+
+                            <span>⚡ 602 HP</span>
+
+                            <span>⚙ AUTO</span>
+
+                            <span>👤 2</span>
+
+                        </div>
+
+
+
+                        <div class="price-row">
+
+
+                            <div>
+
+                                <small>FROM</small>
+
+                                <strong>
+
+                                    ₹1,000
+
+                                </strong>
+
+                                <span>/DAY</span>
+
+                            </div>
+
+                            <a href="payment.html" class="cargrid" onclick="button">
+                                <button type="button" onclick="rentCar('Audi R8',8999)">
+
+                                    RENT →
+
+                                </button>
+
+
+                            </a>
+
+
+
+
+
+                        </div>
+
+
+                    </div>
+
+
+                </article>
+
+
+
+                <!-- =================================================
+                     MERCEDES AMG
+                ================================================== -->
+
+                <article class="car-card" data-name="Mercedes AMG" data-category="luxury">
+
+
+                    <div class="car-image">
+
+
+                        <span class="car-tag">
+
+                            PREMIUM
+
+                        </span>
+
+
+
+                        <img src="https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=1000&q=85"
+                            alt="Mercedes AMG" loading="lazy">
+
+
+                    </div>
+
+
+
+                    <div class="car-info">
+
+
+                        <div class="car-top">
+
+
+                            <div>
+
+                                <h3>
+
+                                    MERCEDES AMG
+
+                                </h3>
+
+
+                                <span>
+
+                                    LUXURY PERFORMANCE
+
+                                </span>
+
+                            </div>
+
+
+
+                            <div class="rating">
+
+                                ★★★★★
+
+                                <small>
+
+                                    4.9
+
+                                </small>
+
+                            </div>
+
+
+                        </div>
+
+
+
+                        <div class="specs">
+
+                            <span>⚡ 469 HP</span>
+
+                            <span>⚙ AUTO</span>
+
+                            <span>👤 5</span>
+
+                        </div>
+
+
+
+                        <div class="price-row">
+
+
+                            <div>
+
+                                <small>FROM</small>
+
+                                <strong>
+
+                                    ₹1,000
+
+                                </strong>
+
+                                <span>/DAY</span>
+
+                            </div>
+
+
+
+                            <a href="payment.html" class="cargrid" onclick="button">
+                                <button type="button" onclick="rentCar('Mercedes AMG',6999)">
+
+                                    RENT →
+
+                                </button>
+                            </a>
+
+
+
+
+
+
+                        </div>
+
+
+                    </div>
+
+
+                </article>
+
+
+            </div>
+
+
+        </section>
+
+
+
+        <!-- =================================================
+             DEALS
+        ================================================== -->
+
+        <section class="deals" id="deals">
+
+
+            <div class="deal-content">
+
+
+                <div class="section-label">
+
+                    LIMITED OFFER
+
+                </div>
+
+
+
+                <h2>
+
+                    UNLOCK YOUR
+
+                    <span>NEXT RIDE</span>
+
+                </h2>
+
+
+
+                <p>
+
+                    Get special rental prices on
+                    selected performance and luxury cars.
+
+                </p>
+
+
+
+                <button class="primary-btn" type="button" onclick="scrollToCars()">
+
+                    VIEW DEALS →
+
+                </button>
+
+
+            </div>
+
+
+
+            <div class="deal-number">
+
+                20%
+
+                <small>OFF</small>
+
+            </div>
+
+
+        </section>
+
+
+    </main>
+
+
+
+    <!-- =====================================================
+         FOOTER
+    ====================================================== -->
+
+    <footer id="about">
+
+
+        <div class="footer-logo">
+
+
+            <img src="pictures/logo.png" alt="RenderRCars Logo">
+
+
+            <p>
+
+                DRIVE BEYOND LIMITS.
+
+            </p>
+
+
+        </div>
+
+
+
+        <div class="footer-links">
+
+
+            <div>
+
+
+                <h3>
+
+                    RENDER CARS
+
+                </h3>
+
+
+                <a href="#abo ut">
+
+                    About Us
+
+                </a>
+
+
+                <a href="#cars">
+
+                    Our Fleet
+
+                </a>
+
+
+                <a href="#home">
+
+                    Contact
+
+                </a>
+
+
+            </div>
+
+
+
+            <div>
+
+
+                <h3>
+
+                    SUPPORT
+
+                </h3>
+
+
+                <a href="#">
+
+                    Help Center
+
+                </a>
+
+
+                <a href="#">
+
+                    Rental Guide
+
+                </a>
+
+
+                <a href="#">
+
+                    Terms
+
+                </a>
+
+
+            </div>
+
+
+
+            <div>
+
+
+                <h3>
+
+                    FOLLOW
+
+                </h3>
+
+
+                <a href="#">
+
+                    Instagram
+
+                </a>
+
+
+                <a href="#">
+
+                    YouTube
+
+                </a>
+
+
+                <a href="#">
+
+                    Discord
+
+                </a>
+
+
+            </div>
+
+
+        </div>
+
+
+
+        <div class="copyright">
+
+            © 2026 RenderRCars —
+            All Rights Reserved.
+
+        </div>
+
+
+    </footer>
+
+
+
+    <!-- =====================================================
+         RENTAL MODAL
+    ====================================================== -->
+
+    <div class="modal" id="rentModal">
+
+
+        <div class="modal-box">
+
+
+            <button class="close" type="button" onclick="closeModal()">
+
+                ×
+
+            </button>
+
+
+
+            <div class="modal-label">
+
+                RENTAL CONFIGURATION
+
+            </div>
+
+
+
+            <h2 id="selectedCar">
+
+                CAR
+
+            </h2>
+
+
+
+            <p>
+
+                Daily Price:
+
+                <strong id="selectedPrice">
+
+                    ₹0
+
+                </strong>
+
+            </p>
+
+
+
+            <label for="modalDate">
+
+                PICKUP DATE
+
+            </label>
+
+
+
+            <input type="date" id="modalDate">
+
+
+
+            <label for="rentalDays">
+
+                RENTAL DAYS
+
+            </label>
+
+
+
+            <input type="number" id="rentalDays" value="1" min="1" max="30">
+
+
+
+            <div class="rental-total">
+
+                <span>
+
+                    TOTAL
+
+                </span>
+
+
+                <strong id="totalPrice">
+
+                    ₹0
+
+                </strong>
+
+            </div>
+
+
+
+            <button class="confirm-button" type="button" onclick="confirmRental()">
+
+                CONFIRM RENTAL
+
+                <span>→</span>
+
+            </button>
+
+
+        </div>
+
+
+    </div>
+
+
+
+    <!-- =====================================================
+         LOGIN MODAL
+    ====================================================== -->
+
+    <div class="modal" id="loginModal">
+
+
+        <div class="modal-box">
+
+
+            <button class="close" type="button" onclick="closeLogin()">
+
+                ×
+
+            </button>
+
+
+
+            <div class="modal-label">
+
+                RENDER ACCOUNT
+
+            </div>
+
+
+
+            <h2>
+
+                WELCOME BACK
+
+            </h2>
+
+
+
+            <label for="email">
+
+                EMAIL
+
+            </label>
+
+
+
+            <input type="email" id="email" placeholder="Enter your email">
+
+
+
+            <label for="password">
+
+                PASSWORD
+
+            </label>
+
+
+
+            <input type="password" id="password" placeholder="Enter your password">
+
+
+
+            <button class="confirm-button" type="button" onclick="loginUser()">
+
+                LOGIN
+
+                <span>→</span>
+
+            </button>
+
+
+        </div>
+
+
+    </div>
+
+
+
+    <!-- =====================================================
+         TOAST
+    ====================================================== -->
+
+    <div class="toast" id="toast">
+
+        <span id="toastMessage">
+
+            Welcome to RenderRCars
+
+        </span>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         JAVASCRIPT
+    ====================================================== -->
+
+    <script src="rent.js"></script>
+
+
+</body>
+
+</html>
