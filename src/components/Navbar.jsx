@@ -221,6 +221,16 @@ export default function Navbar({ onSearch }) {
             <span className="nav-icon-text">📍</span>
             <span>Status</span>
           </button>
+
+          <button
+            type="button"
+            className={`nav-item ${location.pathname === "/help" || location.pathname === "/help-center" ? "active" : ""}`}
+            onClick={() => navigate("/help")}
+            style={{ color: "var(--accent-gold)" }}
+          >
+            <span className="nav-icon-text">🚨</span>
+            <span>Help SOS</span>
+          </button>
         </nav>
 
         <form className="search-container" onSubmit={handleSearchSubmit}>
@@ -371,6 +381,21 @@ export default function Navbar({ onSearch }) {
                   className="dropdown-item"
                   onClick={() => {
                     setDropdownOpen(false);
+                    navigate("/help");
+                  }}
+                >
+                  <span className="item-icon">🚨</span>
+                  <div className="item-content">
+                    <strong style={{ color: "var(--accent-gold)" }}>Help & Emergency SOS</strong>
+                    <small>Roadside flatbed & fuel data</small>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  className="dropdown-item"
+                  onClick={() => {
+                    setDropdownOpen(false);
                     navigate("/my-bookings");
                   }}
                 >
@@ -494,6 +519,18 @@ export default function Navbar({ onSearch }) {
                 onClick={() => handleNavClick("faq")}
               >
                 <span>❓ FAQ & Help</span>
+                <span>→</span>
+              </button>
+              <button
+                type="button"
+                className="mobile-link"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  navigate("/help");
+                }}
+                style={{ color: "var(--accent-gold)" }}
+              >
+                <span>🚨 24/7 Help Center & SOS</span>
                 <span>→</span>
               </button>
               <button

@@ -31,7 +31,8 @@ export default function HomePage({ searchFilter, selectedCategory, setSelectedCa
 
     const matchesCategory = !selectedCategory ||
       selectedCategory === "all" ||
-      car.categoryKey === selectedCategory;
+      car.categoryKey === selectedCategory ||
+      (selectedCategory === "antique" && (car.category?.toLowerCase().includes("antique") || car.id === "rolls-royce-silver-cloud" || car.id === "aston-martin-db5"));
 
     let matchesSeat = true;
     if (seatFilter === "2") matchesSeat = car.seats?.includes("2");
@@ -294,6 +295,7 @@ export default function HomePage({ searchFilter, selectedCategory, setSelectedCa
                   <option value="sports">Sports & Supercars</option>
                   <option value="luxury">Luxury Performance</option>
                   <option value="suv">Commanding 4x4 SUVs</option>
+                  <option value="antique">👑 Antique & Vintage Heritage</option>
                 </select>
               </div>
             </div>
@@ -368,6 +370,20 @@ export default function HomePage({ searchFilter, selectedCategory, setSelectedCa
             <div className="category-icon">🚙</div>
             <strong>COMMANDING SUVs</strong>
             <small>All-Terrain Power & Spacious Comfort</small>
+          </button>
+
+          <button
+            type="button"
+            className={selectedCategory === "antique" ? "active" : ""}
+            onClick={() => {
+              setSelectedCategory("antique");
+              showToast("👑 ANTIQUE & VINTAGE collection filtered");
+              scrollToCars();
+            }}
+          >
+            <div className="category-icon">👑</div>
+            <strong>ANTIQUE & VINTAGE</strong>
+            <small>1960s British Royal Heritage</small>
           </button>
 
           <button

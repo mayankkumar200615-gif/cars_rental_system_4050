@@ -73,6 +73,28 @@ export default function Footer({ onCategorySelect }) {
 
         <div className="footer-column">
           <h3>LEGAL & SUPPORT</h3>
+          <button
+            type="button"
+            className="footer-link-btn"
+            onClick={() => navigate("/help")}
+            style={{ color: "var(--accent-gold)", fontWeight: 700 }}
+          >
+            🚨 24/7 Help Center & SOS
+          </button>
+          <button
+            type="button"
+            className="footer-link-btn"
+            onClick={() => navigate("/help")}
+          >
+            ⛽ Live Fuel & Octane Intel
+          </button>
+          <button
+            type="button"
+            className="footer-link-btn"
+            onClick={() => navigate("/help")}
+          >
+            📞 Regional Hub Helplines
+          </button>
           <button type="button" className="footer-link-btn" onClick={() => navigate("/agreement")}>
             Rental Terms & Agreement
           </button>
@@ -84,7 +106,7 @@ export default function Footer({ onCategorySelect }) {
           >
             🛡️ Fleet Admin Console
           </button>
-          <button type="button" className="footer-link-btn" onClick={() => showToast("24/7 Roadside Assistance Line: +91 98765 43210")}>
+          <button type="button" className="footer-link-btn" onClick={() => showToast("24/7 Roadside Assistance Line: +91 98765 43210 / 1800-889-7363")}>
             24/7 Roadside Assistance
           </button>
           <button type="button" className="footer-link-btn" onClick={() => showToast("Security Deposit Policy: 100% refundable hold released within 24 hours post vehicle check.")}>

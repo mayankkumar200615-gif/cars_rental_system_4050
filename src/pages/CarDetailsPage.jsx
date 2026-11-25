@@ -7,6 +7,7 @@ import { playEngineRevSound } from "../utils/soundEffects";
 export default function CarDetailsPage() {
   const { carId } = useParams();
   const {
+    fleet,
     selectedCar,
     setSelectedCar,
     selectCarForBooking,
@@ -16,7 +17,7 @@ export default function CarDetailsPage() {
     formatCurrency
   } = useCarRental();
 
-  const car = carId ? (getCarById(carId) || selectedCar) : selectedCar;
+  const car = carId ? (getCarById(carId, fleet) || selectedCar) : selectedCar;
 
   useEffect(() => {
     if (car) {

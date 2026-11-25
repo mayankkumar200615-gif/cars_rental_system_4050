@@ -21,10 +21,13 @@ export function CarRentalProvider({ children }) {
       try {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed.map(c => {
+          const parsedIds = new Set(parsed.map(c => c.id));
+          const missingInitial = INITIAL_FLEET_DATA.filter(c => !parsedIds.has(c.id));
+          const merged = parsed.map(c => {
             const initial = CARS_DATA[c.id];
             return initial ? { ...initial, ...c } : c;
           });
+          return [...merged, ...missingInitial];
         }
       } catch (e) {}
     }
@@ -401,6 +404,109 @@ export function CarRentalProvider({ children }) {
     showToast(`Booking marked as ${status}`);
   };
 
+  // Admin Action: Accept / Approve Order
+  const approveBooking = (bookingId) => {
+    let affectedCarId = null;
+    setBookings(prev => {
+      return prev.map(b => {
+        if (b.bookingId === bookingId) {
+          affectedCarId = b.carId;
+          return {
+            ...b,
+            paymentStatus: "Approved",
+            approvalStatus: "Approved",
+            adminDecisionDate: new Date().toLocaleString()
+          };
+        }
+        return b;
+      });
+    });
+
+    if (affectedCarId) {
+      setFleet(prev => prev.map(c => {
+        if (c.id === affectedCarId) {
+          return { ...c, status: "Rented" };
+        }
+        return c;
+      }));
+    }
+    showToast(`Order ${bookingId} has been ACCEPTED & DISPATCHED by Admin! 🚗✨`);
+  };
+
+  // Admin Action: Deny / Reject Order
+  const denyBooking = (bookingId, reason = "Security verification rejected") => {
+    let affectedCarId = null;
+    setBookings(prev => {
+      return prev.map(b => {
+        if (b.bookingId === bookingId) {
+          affectedCarId = b.carId;
+          return {
+            ...b,
+            paymentStatus: "Denied",
+            approvalStatus: "Denied",
+            denialReason: reason,
+            adminDecisionDate: new Date().toLocaleString()
+          };
+        }
+        return b;
+      });
+    });
+
+    // Revert car back to Available so others can book
+    if (affectedCarId) {
+      setFleet(prev => prev.map(c => {
+        if (c.id === affectedCarId) {
+          return { ...c, status: "Available" };
+        }
+        return c;
+      }));
+    }
+    showToast(`Order ${bookingId} has been DENIED by Admin. Vehicle restored to Available inventory. 🛑`);
+  };
+
+  // Admin Action: Mid-Trip Repossession & Cancel due to Miscellaneous Act
+  const repossessBookingCar = (bookingId, breachData = {}) => {
+    const reason = breachData.reason || "Reckless driving & contract breach detected";
+    let affectedCarId = null;
+    let carName = "Vehicle";
+
+    setBookings(prev => {
+      return prev.map(b => {
+        if (b.bookingId === bookingId) {
+          affectedCarId = b.carId;
+          carName = b.carName || carName;
+          return {
+            ...b,
+            paymentStatus: "Terminated (Repossessed)",
+            approvalStatus: "Terminated",
+            repossessed: true,
+            repossessedAt: new Date().toLocaleString(),
+            breachReason: reason,
+            engineKilled: true,
+            securityDepositStatus: breachData.forfeitDeposit ? "Forfeited for damages / contractual penalty" : "Refund Processed"
+          };
+        }
+        return b;
+      });
+    });
+
+    // Repossess vehicle: return back to Available in fleet
+    if (affectedCarId) {
+      setFleet(prev => prev.map(c => {
+        if (c.id === affectedCarId) {
+          return {
+            ...c,
+            status: "Available",
+            lastIncident: `Repossessed from trip on ${new Date().toLocaleDateString()}: ${reason}`
+          };
+        }
+        return c;
+      }));
+    }
+
+    showToast(`🚨 ENGINE IMMOBILIZED! ${carName} (${bookingId}) repossessed and returned to Fleet inventory!`);
+  };
+
   // Record completed booking
   const completeBooking = (bookingPayload) => {
     setConfirmedBooking(bookingPayload);
@@ -450,6 +556,9 @@ export function CarRentalProvider({ children }) {
         deleteCar,
         bookings,
         updateBookingStatus,
+        approveBooking,
+        denyBooking,
+        repossessBookingCar,
         favorites,
         toggleFavorite,
         toast,

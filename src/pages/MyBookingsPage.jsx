@@ -52,8 +52,10 @@ export default function MyBookingsPage() {
         <div className="driver-bookings-list">
           {userBookings.map((b, idx) => {
             let statusBadgeClass = "status-paid";
-            if (b.paymentStatus === "Active") statusBadgeClass = "status-active";
+            if (b.paymentStatus === "Active" || b.paymentStatus === "Approved") statusBadgeClass = "status-active";
             else if (b.paymentStatus === "Cancelled") statusBadgeClass = "status-cancelled";
+            else if (b.paymentStatus === "Denied") statusBadgeClass = "status-denied";
+            else if (b.paymentStatus?.includes("Repossessed") || b.paymentStatus?.includes("Terminated")) statusBadgeClass = "status-repossessed";
 
             return (
               <div key={b.bookingId || idx} className="driver-booking-card">
@@ -89,6 +91,18 @@ export default function MyBookingsPage() {
                   <div className="driver-booking-subtext">
                     Renter: <strong>{b.customerName}</strong> • Method: <strong>{b.paymentMethod || "UPI"}</strong> • Dispatch: <span style={{ color: "var(--status-green)" }}>Instant Key Handover</span>
                   </div>
+
+                  {b.denialReason && (
+                    <div style={{ background: "rgba(255, 23, 68, 0.1)", border: "1px solid rgba(255, 23, 68, 0.3)", borderRadius: "8px", padding: "8px 12px", marginTop: "10px", fontSize: "12px", color: "#ff3366" }}>
+                      🚫 <strong>Order Denied by Fleet Admin:</strong> {b.denialReason}
+                    </div>
+                  )}
+
+                  {b.breachReason && (
+                    <div style={{ background: "rgba(255, 23, 68, 0.15)", border: "1.5px solid #ff1744", borderRadius: "8px", padding: "10px 14px", marginTop: "10px", fontSize: "12px", color: "#ff1744" }}>
+                      🚨 <strong>VEHICLE REPOSSESSED & IMMOBILIZED:</strong> Rental terminated by Fleet Admin due to: <em>{b.breachReason}</em>. Engine kill switch engaged at {b.repossessedAt || "Mid-Trip"}.
+                    </div>
+                  )}
                 </div>
 
                 <div className="driver-booking-actions">

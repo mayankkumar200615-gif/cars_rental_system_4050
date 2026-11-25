@@ -37,6 +37,7 @@ export default function PaymentPage() {
   // OTP Modal state
   const [otpModalOpen, setOtpModalOpen] = useState(false);
   const [otpDigits, setOtpDigits] = useState(["", "", "", "", "", ""]);
+  const [generatedOtp, setGeneratedOtp] = useState("123456");
   const [processing, setProcessing] = useState(false);
 
   // Fare calculation
@@ -131,39 +132,116 @@ export default function PaymentPage() {
       return;
     }
 
-    // Open OTP modal for online methods
+    // Generate fresh random 6-digit OTP code and open modal
+    const freshOtp = generateRandomOtp();
     setOtpModalOpen(true);
     setOtpDigits(["", "", "", "", "", ""]);
+    showToast(`🔐 Demo 3D Secure OTP: ${freshOtp}`);
+  };
+
+  // Helper to generate a random 6-digit OTP
+  const generateRandomOtp = () => {
+    const randomCode = String(Math.floor(100000 + Math.random() * 900000));
+    setGeneratedOtp(randomCode);
+    return randomCode;
+  };
+
+  const handleRegenerateOtp = () => {
+    const freshOtp = generateRandomOtp();
+    setOtpDigits(["", "", "", "", "", ""]);
+    showToast(`🔄 Fresh OTP Code Generated: ${freshOtp}`);
+    setTimeout(() => {
+      const firstInput = document.getElementById("otp-input-0");
+      if (firstInput) firstInput.focus();
+    }, 100);
   };
 
   const handleOtpDigitChange = (index, value) => {
-    const val = value.slice(-1);
+    const cleaned = value.replace(/\D/g, "");
+    if (!cleaned) {
+      const newDigits = [...otpDigits];
+      newDigits[index] = "";
+      setOtpDigits(newDigits);
+      return;
+    }
+
+    // If multiple digits were pasted/typed into this input
+    if (cleaned.length > 1) {
+      const newDigits = [...otpDigits];
+      for (let i = 0; i < cleaned.length && index + i < 6; i++) {
+        newDigits[index + i] = cleaned[i];
+      }
+      setOtpDigits(newDigits);
+      const nextIdx = Math.min(index + cleaned.length, 5);
+      const nextInput = document.getElementById(`otp-input-${nextIdx}`);
+      if (nextInput) nextInput.focus();
+      return;
+    }
+
     const newDigits = [...otpDigits];
-    newDigits[index] = val;
+    newDigits[index] = cleaned;
     setOtpDigits(newDigits);
 
-    if (val && index < 5) {
+    if (cleaned && index < 5) {
       const nextInput = document.getElementById(`otp-input-${index + 1}`);
       if (nextInput) nextInput.focus();
     }
   };
 
   const handleOtpKeyDown = (index, e) => {
-    if (e.key === "Backspace" && !otpDigits[index] && index > 0) {
+    if (e.key === "Backspace") {
+      if (!otpDigits[index] && index > 0) {
+        const newDigits = [...otpDigits];
+        newDigits[index - 1] = "";
+        setOtpDigits(newDigits);
+        const prevInput = document.getElementById(`otp-input-${index - 1}`);
+        if (prevInput) prevInput.focus();
+      } else {
+        const newDigits = [...otpDigits];
+        newDigits[index] = "";
+        setOtpDigits(newDigits);
+      }
+    } else if (e.key === "ArrowLeft" && index > 0) {
       const prevInput = document.getElementById(`otp-input-${index - 1}`);
       if (prevInput) prevInput.focus();
+    } else if (e.key === "ArrowRight" && index < 5) {
+      const nextInput = document.getElementById(`otp-input-${index + 1}`);
+      if (nextInput) nextInput.focus();
     }
   };
 
+  const handleOtpPaste = (e) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (!pastedData) return;
+    const newDigits = ["", "", "", "", "", ""];
+    for (let i = 0; i < pastedData.length; i++) {
+      newDigits[i] = pastedData[i];
+    }
+    setOtpDigits(newDigits);
+    const focusIdx = Math.min(pastedData.length, 5);
+    const targetInput = document.getElementById(`otp-input-${focusIdx}`);
+    if (targetInput) targetInput.focus();
+    showToast(`📋 Pasted OTP: ${pastedData}`);
+  };
+
   const handleAutoFillOtp = () => {
-    setOtpDigits(["1", "2", "3", "4", "5", "6"]);
-    showToast("OTP Auto-Filled: 123456 ⚡");
+    setOtpDigits(generatedOtp.split(""));
+    showToast(`⚡ OTP Auto-Filled: ${generatedOtp}`);
+    setTimeout(() => {
+      const lastInput = document.getElementById("otp-input-5");
+      if (lastInput) lastInput.focus();
+    }, 60);
   };
 
   const handleVerifyOtp = () => {
     const fullOtp = otpDigits.join("");
     if (fullOtp.length < 6) {
-      showToast("Please enter 6-digit OTP (use '123456')");
+      showToast(`Please enter the complete 6-digit OTP`);
+      return;
+    }
+    if (fullOtp !== generatedOtp) {
+      showToast(`Invalid OTP. Please enter "${generatedOtp}" or click Auto-Fill`);
       return;
     }
 
@@ -689,42 +767,62 @@ export default function PaymentPage() {
       {otpModalOpen && (
         <div className="otp-modal active" id="otpModal">
           <div className="otp-box">
-            <div style={{ fontSize: "38px", marginBottom: "10px" }}>🔐</div>
-            <h2 style={{ fontFamily: "var(--font-heading)", fontSize: "22px", fontWeight: 800, textTransform: "uppercase" }}>
+            <div className="otp-icon-badge">🔐</div>
+            <h2 style={{ fontFamily: "var(--font-heading)", fontSize: "22px", fontWeight: 800, textTransform: "uppercase", margin: "0 0 6px" }}>
               3D Secure Verification
             </h2>
-            <p style={{ fontSize: "13px", color: "#a0a5b5", marginTop: "6px" }}>
-              A simulated demo One-Time Password (OTP) has been sent to your registered phone.
+            <p style={{ fontSize: "13px", color: "var(--text-secondary)", margin: "0 0 16px", lineHeight: 1.5 }}>
+              A simulated One-Time Password (OTP) has been sent to your registered device.
             </p>
 
-            <div style={{ background: "rgba(0, 242, 254, 0.08)", border: "1px solid rgba(0, 242, 254, 0.25)", borderRadius: "12px", padding: "10px", margin: "15px 0", fontSize: "12px", color: "var(--primary-cyan)" }}>
-              Demo Passcode: <strong>123456</strong>
+            {/* DYNAMIC RANDOM PASSCODE CARD */}
+            <div className="otp-passcode-card">
+              <div className="otp-passcode-info">
+                <span style={{ fontSize: "20px" }}>📲</span>
+                <div>
+                  <div className="otp-passcode-label">Simulated Security Code</div>
+                  <div className="otp-passcode-num">{generatedOtp}</div>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="otp-regen-btn"
+                onClick={handleRegenerateOtp}
+                title="Generate a new random 6-digit OTP code"
+              >
+                🔄 New Code
+              </button>
             </div>
 
+            {/* 6-DIGIT HORIZONTAL INPUTS */}
             <div className="otp-inputs">
               {otpDigits.map((digit, idx) => (
                 <input
                   key={idx}
                   id={`otp-input-${idx}`}
                   type="text"
-                  className="otp-digit"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  className={`otp-digit ${digit ? "filled" : ""}`}
                   maxLength={1}
                   placeholder="•"
                   value={digit}
                   onChange={(e) => handleOtpDigitChange(idx, e.target.value)}
                   onKeyDown={(e) => handleOtpKeyDown(idx, e)}
+                  onPaste={handleOtpPaste}
                   autoFocus={idx === 0}
+                  autoComplete="one-time-code"
                 />
               ))}
             </div>
 
-            <div style={{ display: "flex", gap: "10px", justifyContent: "center", marginBottom: "15px" }}>
-              <button type="button" className="btn-apply-coupon" onClick={handleAutoFillOtp}>
-                Auto-Fill "123456" ⚡
+            <div className="otp-autofill-action-row">
+              <button type="button" className="otp-autofill-btn" onClick={handleAutoFillOtp}>
+                ⚡ Auto-Fill "{generatedOtp}"
               </button>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginTop: "20px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginTop: "10px" }}>
               <button
                 type="button"
                 className="btn-agree-back"

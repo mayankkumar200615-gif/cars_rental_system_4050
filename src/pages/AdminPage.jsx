@@ -20,6 +20,9 @@ export default function AdminPage() {
     deleteCar,
     bookings,
     updateBookingStatus,
+    approveBooking,
+    denyBooking,
+    repossessBookingCar,
     navigate,
     showToast
   } = useCarRental();
@@ -29,7 +32,59 @@ export default function AdminPage() {
   const [searchFilter, setSearchFilter] = useState("");
   const [fleetSearch, setFleetSearch] = useState("");
   const [fleetStatusFilter, setFleetStatusFilter] = useState("all");
+  const [fleetCategoryFilter, setFleetCategoryFilter] = useState("all");
+  const [fleetViewMode, setFleetViewMode] = useState("cards"); // cards | table
+  const [bookingsViewMode, setBookingsViewMode] = useState("table"); // table | cards
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
+
+  // Repossession & Order Decision Modals State
+  const [repossessionModalOpen, setRepossessionModalOpen] = useState(false);
+  const [selectedBookingForRepossess, setSelectedBookingForRepossess] = useState(null);
+  const [repossessReason, setRepossessReason] = useState("Track Speeding / Reckless Driving Breach (>200 km/h detected)");
+  const [repossessNotes, setRepossessNotes] = useState("");
+  const [forfeitDeposit, setForfeitDeposit] = useState(true);
+  const [killEngineSignal, setKillEngineSignal] = useState(true);
+
+  const [denialModalOpen, setDenialModalOpen] = useState(false);
+  const [selectedBookingForDeny, setSelectedBookingForDeny] = useState(null);
+  const [denialReason, setDenialReason] = useState("Driver background / KYC verification declined");
+  const [denialNotes, setDenialNotes] = useState("");
+
+  const openRepossessModal = (booking) => {
+    setSelectedBookingForRepossess(booking);
+    setRepossessReason("Track Speeding / Reckless Driving Breach (>200 km/h detected)");
+    setRepossessNotes("");
+    setForfeitDeposit(true);
+    setKillEngineSignal(true);
+    setRepossessionModalOpen(true);
+  };
+
+  const handleExecuteRepossess = () => {
+    if (!selectedBookingForRepossess) return;
+    const fullReason = repossessNotes ? `${repossessReason} — Notes: ${repossessNotes}` : repossessReason;
+    repossessBookingCar(selectedBookingForRepossess.bookingId, {
+      reason: fullReason,
+      forfeitDeposit
+    });
+    setRepossessionModalOpen(false);
+    setSelectedBookingForRepossess(null);
+  };
+
+  const openDenyModal = (booking) => {
+    setSelectedBookingForDeny(booking);
+    setDenialReason("Driver background / KYC verification declined");
+    setDenialNotes("");
+    setDenialModalOpen(true);
+  };
+
+  const handleExecuteDeny = () => {
+    if (!selectedBookingForDeny) return;
+    const fullReason = denialNotes ? `${denialReason} — Notes: ${denialNotes}` : denialReason;
+    denyBooking(selectedBookingForDeny.bookingId, fullReason);
+    setDenialModalOpen(false);
+    setSelectedBookingForDeny(null);
+  };
 
   // API Status & Testing state
   const [apiEndpoints, setApiEndpoints] = useState(SYSTEM_MICROSERVICES);
@@ -172,7 +227,7 @@ export default function AdminPage() {
     return matchesSearch && matchesHub;
   });
 
-  // Filtered Fleet by search term AND status
+  // Filtered Fleet by search term, status AND category
   const filteredFleet = fleet.filter(car => {
     const term = fleetSearch.toLowerCase().trim();
     const matchesSearch = !term || (
@@ -182,7 +237,10 @@ export default function AdminPage() {
       car.id?.toLowerCase().includes(term)
     );
     const matchesStatus = fleetStatusFilter === "all" || car.status?.toLowerCase() === fleetStatusFilter.toLowerCase();
-    return matchesSearch && matchesStatus;
+    const matchesCategory = fleetCategoryFilter === "all" ||
+      car.categoryKey === fleetCategoryFilter ||
+      (car.category && car.category.toLowerCase().includes(fleetCategoryFilter.toLowerCase()));
+    return matchesSearch && matchesStatus && matchesCategory;
   });
 
   // Calculate KPI metrics
@@ -221,8 +279,16 @@ export default function AdminPage() {
 
   return (
     <div className="admin-layout">
+      {/* MOBILE BACKDROP OVERLAY */}
+      {mobileSidebarOpen && (
+        <div
+          className="admin-mobile-overlay"
+          onClick={() => setMobileSidebarOpen(false)}
+        ></div>
+      )}
+
       {/* SIDEBAR NAVIGATION */}
-      <aside className="admin-sidebar">
+      <aside className={`admin-sidebar ${mobileSidebarOpen ? "mobile-open" : ""}`}>
         <div>
           <div className="sidebar-logo">
             <button
@@ -233,62 +299,107 @@ export default function AdminPage() {
               <img src="/pictures/logo.png" alt="RenderRCars Logo" />
             </button>
             <span className="admin-tag-badge">ADMIN</span>
+            {mobileSidebarOpen && (
+              <button
+                type="button"
+                className="admin-close-sidebar-btn"
+                onClick={() => setMobileSidebarOpen(false)}
+                title="Close Navigation"
+              >
+                ✕
+              </button>
+            )}
           </div>
 
           <nav className="sidebar-nav">
             <button
               type="button"
               className={`nav-link-btn ${activeTab === "dashboard" ? "active" : ""}`}
-              onClick={() => setActiveTab("dashboard")}
+              onClick={() => {
+                setActiveTab("dashboard");
+                setMobileSidebarOpen(false);
+              }}
             >
               📊 Overview
             </button>
             <button
               type="button"
               className={`nav-link-btn ${activeTab === "fleet" ? "active" : ""}`}
-              onClick={() => setActiveTab("fleet")}
+              onClick={() => {
+                setActiveTab("fleet");
+                setMobileSidebarOpen(false);
+              }}
             >
-              🏎️ Fleet Inventory
+              🏎️ Fleet Inventory ({fleet.length})
             </button>
             <button
               type="button"
               className={`nav-link-btn ${activeTab === "bookings" ? "active" : ""}`}
-              onClick={() => setActiveTab("bookings")}
+              onClick={() => {
+                setActiveTab("bookings");
+                setMobileSidebarOpen(false);
+              }}
             >
-              📑 Live Bookings
+              📑 Live Bookings ({bookings.length})
             </button>
             <button
               type="button"
               className={`nav-link-btn ${activeTab === "gps" ? "active" : ""}`}
-              onClick={() => setActiveTab("gps")}
+              onClick={() => {
+                setActiveTab("gps");
+                setMobileSidebarOpen(false);
+              }}
             >
               🛰️ Fleet GPS Radar
             </button>
             <button
               type="button"
               className={`nav-link-btn ${activeTab === "api" ? "active" : ""}`}
-              onClick={() => setActiveTab("api")}
+              onClick={() => {
+                setActiveTab("api");
+                setMobileSidebarOpen(false);
+              }}
             >
               ⚡ API Health & Status
             </button>
             <button
               type="button"
               className={`nav-link-btn ${activeTab === "analytics" ? "active" : ""}`}
-              onClick={() => setActiveTab("analytics")}
+              onClick={() => {
+                setActiveTab("analytics");
+                setMobileSidebarOpen(false);
+              }}
             >
               📈 Revenue & Growth
             </button>
             <button
               type="button"
               className="nav-link-btn"
-              onClick={() => navigate("/status")}
+              onClick={() => {
+                navigate("/help");
+                setMobileSidebarOpen(false);
+              }}
+              style={{ color: "var(--accent-gold)" }}
+            >
+              🚨 Help & SOS Center ↗
+            </button>
+            <button
+              type="button"
+              className="nav-link-btn"
+              onClick={() => {
+                navigate("/status");
+                setMobileSidebarOpen(false);
+              }}
             >
               📍 User Status Tracker ↗
             </button>
             <button
               type="button"
               className="nav-link-btn"
-              onClick={() => navigate("/")}
+              onClick={() => {
+                navigate("/");
+                setMobileSidebarOpen(false);
+              }}
             >
               🌐 View Live Fleet ↗
             </button>
@@ -323,12 +434,27 @@ export default function AdminPage() {
       <main className="admin-main">
         {/* TOP HEADER BAR */}
         <header className="admin-header-bar">
-          <div>
-            <div className="section-label" style={{ fontSize: "11px" }}>CENTRAL FLEET DISPATCH</div>
-            <h1>Fleet Control <span>Center</span></h1>
+          <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+            <button
+              type="button"
+              className="admin-menu-toggle-btn"
+              onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
+              title="Toggle Navigation Menu"
+            >
+              ☰
+            </button>
+            <div>
+              <div className="section-label" style={{ fontSize: "11px" }}>CENTRAL FLEET DISPATCH</div>
+              <h1 style={{ margin: 0 }}>Fleet Control <span>Center</span></h1>
+            </div>
           </div>
 
           <div className="admin-top-actions">
+            <div className="admin-telemetry-badge">
+              <span className="pulse-dot"></span>
+              <span>100% ONLINE</span>
+            </div>
+
             <select
               className="hub-select"
               value={selectedHub}
@@ -356,7 +482,7 @@ export default function AdminPage() {
               }}
               onClick={() => setActiveTab("api")}
             >
-              <span>⚡</span> API Status Check
+              <span>⚡</span> API Check
             </button>
 
             <button
@@ -369,6 +495,52 @@ export default function AdminPage() {
           </div>
         </header>
 
+        {/* RESPONSIVE MOBILE TABS BAR (VISIBLE ON MOBILE / TABLET) */}
+        <div className="admin-mobile-tabs-bar">
+          <button
+            type="button"
+            className={`mobile-tab-chip ${activeTab === "dashboard" ? "active" : ""}`}
+            onClick={() => setActiveTab("dashboard")}
+          >
+            📊 Overview
+          </button>
+          <button
+            type="button"
+            className={`mobile-tab-chip ${activeTab === "fleet" ? "active" : ""}`}
+            onClick={() => setActiveTab("fleet")}
+          >
+            🏎️ Fleet ({fleet.length})
+          </button>
+          <button
+            type="button"
+            className={`mobile-tab-chip ${activeTab === "bookings" ? "active" : ""}`}
+            onClick={() => setActiveTab("bookings")}
+          >
+            📑 Bookings ({bookings.length})
+          </button>
+          <button
+            type="button"
+            className={`mobile-tab-chip ${activeTab === "gps" ? "active" : ""}`}
+            onClick={() => setActiveTab("gps")}
+          >
+            🛰️ Radar
+          </button>
+          <button
+            type="button"
+            className={`mobile-tab-chip ${activeTab === "api" ? "active" : ""}`}
+            onClick={() => setActiveTab("api")}
+          >
+            ⚡ API
+          </button>
+          <button
+            type="button"
+            className={`mobile-tab-chip ${activeTab === "analytics" ? "active" : ""}`}
+            onClick={() => setActiveTab("analytics")}
+          >
+            📈 Growth
+          </button>
+        </div>
+
         {/* ADMIN CONTENT BODY */}
         <div className="admin-content-body">
           {/* KPI METRICS ROW */}
@@ -376,24 +548,34 @@ export default function AdminPage() {
             <div className="kpi-card">
               <div className="kpi-icon red">🏎️</div>
               <div className="kpi-details">
-                <small>Total Vehicles</small>
-                <h3>{totalVehicles}</h3>
+                <small>Total Fleet Size</small>
+                <h3>{totalVehicles} Vehicles</h3>
+                <div className="kpi-subtext">
+                  <span style={{ color: "var(--status-green)" }}>● {fleet.filter(c => c.status === "Available").length} Ready</span>
+                  <span style={{ color: "var(--primary-cyan)", marginLeft: "8px" }}>● {rentedVehicles} On Road</span>
+                </div>
               </div>
             </div>
 
             <div className="kpi-card">
               <div className="kpi-icon blue">⚡</div>
               <div className="kpi-details">
-                <small>Active Trips</small>
-                <h3>{rentedVehicles + bookings.filter(b => b.paymentStatus === "Active").length} Active</h3>
+                <small>Active Trips & Missions</small>
+                <h3>{rentedVehicles + bookings.filter(b => b.paymentStatus === "Active").length} In Transit</h3>
+                <div className="kpi-subtext">
+                  <span>GPS Telemetry: 100% Locked</span>
+                </div>
               </div>
             </div>
 
             <div className="kpi-card">
               <div className="kpi-icon green">💰</div>
               <div className="kpi-details">
-                <small>Gross Bookings</small>
+                <small>Gross Bookings Revenue</small>
                 <h3>{formatCurrency(totalRevenue)}</h3>
+                <div className="kpi-subtext">
+                  <span style={{ color: "var(--status-green)" }}>↑ +18.4% this quarter</span>
+                </div>
               </div>
             </div>
 
@@ -402,6 +584,12 @@ export default function AdminPage() {
               <div className="kpi-details">
                 <small>Fleet Utilization</small>
                 <h3>{utilization}%</h3>
+                <div className="utilization-bar-track">
+                  <div
+                    className="utilization-bar-fill"
+                    style={{ width: `${Math.min(utilization, 100)}%` }}
+                  ></div>
+                </div>
               </div>
             </div>
           </section>
@@ -471,8 +659,12 @@ export default function AdminPage() {
                       ) : (
                         filteredBookings.map((b) => {
                           let statusClass = "status-paid";
-                          if (b.paymentStatus === "Active") statusClass = "status-active";
+                          if (b.paymentStatus === "Active" || b.paymentStatus === "Approved") statusClass = "status-active";
                           else if (b.paymentStatus === "Cancelled") statusClass = "status-cancelled";
+                          else if (b.paymentStatus === "Denied") statusClass = "status-denied";
+                          else if (b.paymentStatus?.includes("Repossessed") || b.paymentStatus?.includes("Terminated")) statusClass = "status-repossessed";
+
+                          const isRepossessable = !b.paymentStatus?.includes("Repossessed") && !b.paymentStatus?.includes("Denied") && b.paymentStatus !== "Cancelled";
 
                           return (
                             <tr key={b.bookingId}>
@@ -493,6 +685,39 @@ export default function AdminPage() {
                               <td><span className={`status-badge ${statusClass}`}>{b.paymentStatus}</span></td>
                               <td>
                                 <div className="action-btn-group">
+                                  {b.paymentStatus !== "Approved" && (
+                                    <button
+                                      type="button"
+                                      className="btn-action-icon"
+                                      title="Accept / Approve Order"
+                                      style={{ color: "var(--status-green)", borderColor: "rgba(0, 230, 118, 0.4)" }}
+                                      onClick={() => approveBooking(b.bookingId)}
+                                    >
+                                      ✓
+                                    </button>
+                                  )}
+                                  {b.paymentStatus !== "Denied" && (
+                                    <button
+                                      type="button"
+                                      className="btn-action-icon"
+                                      title="Deny / Reject Order"
+                                      style={{ color: "var(--primary-red)", borderColor: "rgba(255, 23, 68, 0.4)" }}
+                                      onClick={() => openDenyModal(b)}
+                                    >
+                                      ✕
+                                    </button>
+                                  )}
+                                  {isRepossessable && (
+                                    <button
+                                      type="button"
+                                      className="btn-action-icon"
+                                      title="Emergency Repossession & Remote Engine Kill"
+                                      style={{ color: "#ffd700", borderColor: "rgba(255, 215, 0, 0.5)", background: "rgba(255, 23, 68, 0.15)" }}
+                                      onClick={() => openRepossessModal(b)}
+                                    >
+                                      🚨
+                                    </button>
+                                  )}
                                   <button
                                     type="button"
                                     className="btn-action-icon"
@@ -501,23 +726,6 @@ export default function AdminPage() {
                                     onClick={() => navigate(`/status?bookingId=${b.bookingId}`)}
                                   >
                                     🛰️
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="btn-action-icon"
-                                    title="Mark Completed"
-                                    onClick={() => updateBookingStatus(b.bookingId, "Completed")}
-                                  >
-                                    ✓
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="btn-action-icon"
-                                    title="Cancel Booking"
-                                    style={{ color: "var(--primary-red)" }}
-                                    onClick={() => updateBookingStatus(b.bookingId, "Cancelled")}
-                                  >
-                                    ✕
                                   </button>
                                 </div>
                               </td>
@@ -627,121 +835,240 @@ export default function AdminPage() {
               <div className="dashboard-card">
                 <div className="card-top-bar" style={{ flexWrap: "wrap", gap: "15px" }}>
                   <div>
-                    <h2>Master Fleet Inventory Management</h2>
+                    <h2>Master Fleet Inventory Management ({filteredFleet.length})</h2>
                     <p style={{ color: "var(--text-secondary)", fontSize: "14px", margin: "4px 0 0" }}>
                       Configure vehicle availability, tariffs, and technical specifications across all regional hubs.
                     </p>
                   </div>
-                  <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+
+                  <div className="admin-controls-row">
                     <input
                       type="text"
                       placeholder="Search model, brand, or status..."
                       value={fleetSearch}
                       onChange={(e) => setFleetSearch(e.target.value)}
-                      style={{
-                        padding: "8px 14px",
-                        borderRadius: "10px",
-                        border: "1px solid var(--border-color)",
-                        background: "rgba(255, 255, 255, 0.05)",
-                        color: "#fff",
-                        fontSize: "13px"
-                      }}
+                      className="admin-search-input"
                     />
+
                     <select
                       value={fleetStatusFilter}
                       onChange={(e) => setFleetStatusFilter(e.target.value)}
-                      style={{
-                        padding: "8px 14px",
-                        borderRadius: "10px",
-                        border: "1px solid var(--border-color)",
-                        background: "#161626",
-                        color: "#fff",
-                        fontSize: "13px"
-                      }}
+                      className="admin-select-input"
                     >
                       <option value="all">All Statuses</option>
-                      <option value="available">Available</option>
-                      <option value="rented">Rented / On Track</option>
+                      <option value="available">Available (Ready)</option>
+                      <option value="rented">Rented (On Road)</option>
                       <option value="maintenance">Maintenance</option>
                     </select>
+
+                    {/* VIEW MODE TOGGLE BUTTONS */}
+                    <div className="admin-view-toggle">
+                      <button
+                        type="button"
+                        className={`view-toggle-btn ${fleetViewMode === "cards" ? "active" : ""}`}
+                        onClick={() => setFleetViewMode("cards")}
+                        title="Grid Cards View"
+                      >
+                        🗂️ Cards
+                      </button>
+                      <button
+                        type="button"
+                        className={`view-toggle-btn ${fleetViewMode === "table" ? "active" : ""}`}
+                        onClick={() => setFleetViewMode("table")}
+                        title="Tabular View"
+                      >
+                        📑 Table
+                      </button>
+                    </div>
+
                     <button type="button" className="btn-add-car" onClick={() => setAddModalOpen(true)}>
                       + Induct Vehicle
                     </button>
                   </div>
                 </div>
 
-                <div className="custom-table-wrapper" style={{ marginTop: "15px" }}>
-                  <table className="custom-table">
-                    <thead>
-                      <tr>
-                        <th>Vehicle Model</th>
-                        <th>Daily Tariff</th>
-                        <th>Output</th>
-                        <th>Transmission</th>
-                        <th>Status</th>
-                        <th>Trips Done</th>
-                        <th>Manage</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredFleet.length === 0 ? (
-                        <tr>
-                          <td colSpan="7" style={{ textAlign: "center", padding: "40px", color: "var(--text-muted)" }}>
-                            No vehicles found matching "{fleetSearch}".
-                          </td>
-                        </tr>
-                      ) : (
-                        filteredFleet.map((car) => {
-                          let statusClass = "status-available";
-                          if (car.status === "Rented") statusClass = "status-rented";
-                          else if (car.status === "Maintenance") statusClass = "status-maintenance";
-
-                          return (
-                            <tr key={car.id}>
-                              <td>
-                                <div className="car-cell">
-                                  <img src={car.image} alt={car.name} className="car-thumb" />
-                                  <div>
-                                    <strong style={{ color: "#fff", display: "block" }}>{car.name}</strong>
-                                    <small style={{ color: "var(--text-muted)" }}>{car.brand} • {car.category}</small>
-                                  </div>
-                                </div>
-                              </td>
-                              <td><strong>{formatCurrency(car.price)}</strong> / Day</td>
-                              <td>⚡ {car.hp || car.horsepower}</td>
-                              <td>⚙️ {car.transmission}</td>
-                              <td>
-                                <span className={`status-badge ${statusClass}`}>{car.status}</span>
-                              </td>
-                              <td>{car.trips || 0} Trips</td>
-                              <td>
-                                <div className="action-btn-group">
-                                  <button
-                                    type="button"
-                                    className="btn-action-icon"
-                                    title="Toggle Status"
-                                    onClick={() => toggleCarStatus(car.id)}
-                                  >
-                                    🔄 Status
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="btn-action-icon"
-                                    title="Remove Car"
-                                    style={{ color: "var(--primary-red)" }}
-                                    onClick={() => deleteCar(car.id)}
-                                  >
-                                    🗑️
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          );
-                        })
-                      )}
-                    </tbody>
-                  </table>
+                {/* CATEGORY FILTER CHIPS */}
+                <div className="admin-category-chips">
+                  <button
+                    type="button"
+                    className={`admin-chip ${fleetCategoryFilter === "all" ? "active" : ""}`}
+                    onClick={() => setFleetCategoryFilter("all")}
+                  >
+                    All Fleet ({fleet.length})
+                  </button>
+                  <button
+                    type="button"
+                    className={`admin-chip ${fleetCategoryFilter === "sports" ? "active" : ""}`}
+                    onClick={() => setFleetCategoryFilter("sports")}
+                  >
+                    🏎️ Sports & Supercars ({fleet.filter(c => c.categoryKey === "sports" || c.category?.toLowerCase().includes("sports") || c.category?.toLowerCase().includes("supercar")).length})
+                  </button>
+                  <button
+                    type="button"
+                    className={`admin-chip ${fleetCategoryFilter === "luxury" ? "active" : ""}`}
+                    onClick={() => setFleetCategoryFilter("luxury")}
+                  >
+                    💎 Executive Luxury ({fleet.filter(c => c.categoryKey === "luxury" || c.category?.toLowerCase().includes("luxury")).length})
+                  </button>
+                  <button
+                    type="button"
+                    className={`admin-chip ${fleetCategoryFilter === "suv" ? "active" : ""}`}
+                    onClick={() => setFleetCategoryFilter("suv")}
+                  >
+                    🚙 4x4 & Super SUVs ({fleet.filter(c => c.categoryKey === "suv" || c.category?.toLowerCase().includes("suv")).length})
+                  </button>
                 </div>
+
+                {/* CONDITIONAL RENDERING: CARDS VIEW VS TABLE VIEW */}
+                {fleetViewMode === "cards" ? (
+                  <div className="admin-fleet-cards-grid">
+                    {filteredFleet.length === 0 ? (
+                      <div className="admin-empty-state">
+                        <p>No vehicles found matching "{fleetSearch}".</p>
+                      </div>
+                    ) : (
+                      filteredFleet.map((car) => {
+                        let statusClass = "status-available";
+                        if (car.status === "Rented") statusClass = "status-rented";
+                        else if (car.status === "Maintenance") statusClass = "status-maintenance";
+
+                        return (
+                          <div key={car.id} className="admin-car-card">
+                            <div className="admin-car-card-img">
+                              <img src={car.image} alt={car.name} loading="lazy" />
+                              <span className={`status-badge ${statusClass}`}>
+                                {car.status === "Rented" ? "● ON TRIP" : car.status === "Maintenance" ? "● SERVICE" : "● AVAILABLE"}
+                              </span>
+                              <span className="admin-car-price-pill">
+                                {formatCurrency(car.price)} <span>/day</span>
+                              </span>
+                            </div>
+
+                            <div className="admin-car-card-content">
+                              <div className="admin-car-header">
+                                <h3>{car.name}</h3>
+                                <span className="admin-car-sub">{car.model || `${car.brand} • ${car.category}`}</span>
+                              </div>
+
+                              <div className="admin-car-specs-row">
+                                <span>⚡ {car.hp || car.horsepower}</span>
+                                <span>⚙️ {car.transmission}</span>
+                                <span>👤 {car.seats || "4-5 Seats"}</span>
+                                <span>🛣️ {car.trips || 0} Trips</span>
+                              </div>
+
+                              <div className="admin-car-card-actions">
+                                <button
+                                  type="button"
+                                  className="admin-card-action-btn status-btn"
+                                  onClick={() => toggleCarStatus(car.id)}
+                                >
+                                  🔄 Switch Status
+                                </button>
+                                <button
+                                  type="button"
+                                  className="admin-card-action-btn view-btn"
+                                  onClick={() => navigate(`/details/${car.id}`)}
+                                >
+                                  👁️ Details
+                                </button>
+                                <button
+                                  type="button"
+                                  className="admin-card-action-btn delete-btn"
+                                  onClick={() => deleteCar(car.id)}
+                                  title="Delete from fleet"
+                                >
+                                  🗑️
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                ) : (
+                  <div className="custom-table-wrapper" style={{ marginTop: "15px" }}>
+                    <table className="custom-table">
+                      <thead>
+                        <tr>
+                          <th>Vehicle Model</th>
+                          <th>Daily Tariff</th>
+                          <th>Output</th>
+                          <th>Transmission</th>
+                          <th>Status</th>
+                          <th>Trips Done</th>
+                          <th>Manage</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredFleet.length === 0 ? (
+                          <tr>
+                            <td colSpan="7" style={{ textAlign: "center", padding: "40px", color: "var(--text-muted)" }}>
+                              No vehicles found matching "{fleetSearch}".
+                            </td>
+                          </tr>
+                        ) : (
+                          filteredFleet.map((car) => {
+                            let statusClass = "status-available";
+                            if (car.status === "Rented") statusClass = "status-rented";
+                            else if (car.status === "Maintenance") statusClass = "status-maintenance";
+
+                            return (
+                              <tr key={car.id}>
+                                <td>
+                                  <div className="car-cell">
+                                    <img src={car.image} alt={car.name} className="car-thumb" />
+                                    <div>
+                                      <strong style={{ color: "#fff", display: "block" }}>{car.name}</strong>
+                                      <small style={{ color: "var(--text-muted)" }}>{car.brand} • {car.category}</small>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td><strong>{formatCurrency(car.price)}</strong> / Day</td>
+                                <td>⚡ {car.hp || car.horsepower}</td>
+                                <td>⚙️ {car.transmission}</td>
+                                <td>
+                                  <span className={`status-badge ${statusClass}`}>{car.status}</span>
+                                </td>
+                                <td>{car.trips || 0} Trips</td>
+                                <td>
+                                  <div className="action-btn-group">
+                                    <button
+                                      type="button"
+                                      className="btn-action-icon"
+                                      title="Toggle Status"
+                                      onClick={() => toggleCarStatus(car.id)}
+                                    >
+                                      🔄 Status
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="btn-action-icon"
+                                      title="Inspect Details"
+                                      onClick={() => navigate(`/details/${car.id}`)}
+                                    >
+                                      👁️
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="btn-action-icon"
+                                      title="Remove Car"
+                                      style={{ color: "var(--primary-red)" }}
+                                      onClick={() => deleteCar(car.id)}
+                                    >
+                                      🗑️
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             </section>
           )}
@@ -757,93 +1084,221 @@ export default function AdminPage() {
                       Manage customer reservations, inspect live status endpoints, and trigger dispatch overrides.
                     </p>
                   </div>
-                  <input
-                    type="text"
-                    placeholder="Search bookings, phone, email..."
-                    value={searchFilter}
-                    onChange={(e) => setSearchFilter(e.target.value)}
-                    style={{
-                      padding: "8px 14px",
-                      borderRadius: "10px",
-                      border: "1px solid var(--border-color)",
-                      background: "rgba(255, 255, 255, 0.05)",
-                      color: "#fff",
-                      fontSize: "13px"
-                    }}
-                  />
+
+                  <div className="admin-controls-row">
+                    <input
+                      type="text"
+                      placeholder="Search bookings, phone, email..."
+                      value={searchFilter}
+                      onChange={(e) => setSearchFilter(e.target.value)}
+                      className="admin-search-input"
+                    />
+
+                    <div className="admin-view-toggle">
+                      <button
+                        type="button"
+                        className={`view-toggle-btn ${bookingsViewMode === "table" ? "active" : ""}`}
+                        onClick={() => setBookingsViewMode("table")}
+                        title="Tabular View"
+                      >
+                        📑 Table
+                      </button>
+                      <button
+                        type="button"
+                        className={`view-toggle-btn ${bookingsViewMode === "cards" ? "active" : ""}`}
+                        onClick={() => setBookingsViewMode("cards")}
+                        title="Cards View"
+                      >
+                        🗂️ Cards
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="custom-table-wrapper" style={{ marginTop: "15px" }}>
-                  <table className="custom-table">
-                    <thead>
-                      <tr>
-                        <th>Booking ID</th>
-                        <th>Driver / Customer</th>
-                        <th>Vehicle</th>
-                        <th>Schedule & Hub</th>
-                        <th>Total Fare</th>
-                        <th>Method</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredBookings.map((b) => {
+                {bookingsViewMode === "cards" ? (
+                  <div className="admin-bookings-cards-grid" style={{ marginTop: "18px" }}>
+                    {filteredBookings.length === 0 ? (
+                      <div className="admin-empty-state">
+                        <p>No reservations found matching "{searchFilter}".</p>
+                      </div>
+                    ) : (
+                      filteredBookings.map((b) => {
                         let statusClass = "status-paid";
-                        if (b.paymentStatus === "Active") statusClass = "status-active";
+                        if (b.paymentStatus === "Active" || b.paymentStatus === "Approved") statusClass = "status-active";
                         else if (b.paymentStatus === "Cancelled") statusClass = "status-cancelled";
+                        else if (b.paymentStatus === "Denied") statusClass = "status-denied";
+                        else if (b.paymentStatus?.includes("Repossessed") || b.paymentStatus?.includes("Terminated")) statusClass = "status-repossessed";
+
+                        const isRepossessable = !b.paymentStatus?.includes("Repossessed") && !b.paymentStatus?.includes("Denied") && b.paymentStatus !== "Cancelled";
 
                         return (
-                          <tr key={b.bookingId}>
-                            <td><strong style={{ color: "var(--primary-cyan)" }}>{b.bookingId}</strong></td>
-                            <td>
-                              <div style={{ color: "#fff", fontWeight: 700 }}>{b.customerName}</div>
-                              <small style={{ color: "var(--text-muted)" }}>{b.phone || b.email}</small>
-                            </td>
-                            <td>{b.carName}</td>
-                            <td>
-                              <small style={{ color: "var(--text-secondary)" }}>{b.pickupDate} → {b.returnDate}</small>
-                              <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>{b.pickupLocation}</div>
-                            </td>
-                            <td><strong>{formatCurrency(b.totalAmount)}</strong></td>
-                            <td><small>{b.paymentMethod}</small></td>
-                            <td><span className={`status-badge ${statusClass}`}>{b.paymentStatus}</span></td>
-                            <td>
-                              <div className="action-btn-group">
-                                <button
-                                  type="button"
-                                  className="btn-action-icon"
-                                  title="Inspect Live Status API"
-                                  style={{ color: "var(--primary-cyan)", borderColor: "rgba(0, 242, 254, 0.4)" }}
-                                  onClick={() => navigate(`/status?bookingId=${b.bookingId}`)}
-                                >
-                                  🛰️
-                                </button>
-                                <button
-                                  type="button"
-                                  className="btn-action-icon"
-                                  title="Mark Completed"
-                                  onClick={() => updateBookingStatus(b.bookingId, "Completed")}
-                                >
-                                  ✓
-                                </button>
-                                <button
-                                  type="button"
-                                  className="btn-action-icon"
-                                  title="Cancel Booking"
-                                  style={{ color: "var(--primary-red)" }}
-                                  onClick={() => updateBookingStatus(b.bookingId, "Cancelled")}
-                                >
-                                  ✕
-                                </button>
+                          <div key={b.bookingId} className="admin-booking-card">
+                            <div className="booking-card-top">
+                              <strong style={{ color: "var(--primary-cyan)" }}>{b.bookingId}</strong>
+                              <span className={`status-badge ${statusClass}`}>{b.paymentStatus}</span>
+                            </div>
+
+                            <div className="booking-card-customer">
+                              <h4>{b.customerName}</h4>
+                              <small>{b.phone || b.email}</small>
+                            </div>
+
+                            <div className="booking-card-details">
+                              <div>
+                                <small>CAR</small>
+                                <strong>{b.carName}</strong>
                               </div>
-                            </td>
-                          </tr>
+                              <div>
+                                <small>FARE</small>
+                                <strong style={{ color: "var(--status-green)" }}>{formatCurrency(b.totalAmount)}</strong>
+                              </div>
+                            </div>
+
+                            <div className="booking-card-route">
+                              <small>DATES & LOCATION</small>
+                              <p>{b.pickupDate} → {b.returnDate} • {b.pickupLocation}</p>
+                            </div>
+
+                            <div className="booking-card-actions" style={{ flexWrap: "wrap", gap: "6px" }}>
+                              {b.paymentStatus !== "Approved" && (
+                                <button
+                                  type="button"
+                                  className="admin-card-action-btn"
+                                  style={{ background: "rgba(0, 230, 118, 0.15)", color: "var(--status-green)", border: "1px solid rgba(0, 230, 118, 0.4)" }}
+                                  onClick={() => approveBooking(b.bookingId)}
+                                  title="Accept & Confirm Order"
+                                >
+                                  ✓ Accept
+                                </button>
+                              )}
+                              {b.paymentStatus !== "Denied" && (
+                                <button
+                                  type="button"
+                                  className="admin-card-action-btn"
+                                  style={{ background: "rgba(255, 23, 68, 0.12)", color: "var(--primary-red)", border: "1px solid rgba(255, 23, 68, 0.4)" }}
+                                  onClick={() => openDenyModal(b)}
+                                  title="Deny & Restore Vehicle"
+                                >
+                                  ✕ Deny
+                                </button>
+                              )}
+                              {isRepossessable && (
+                                <button
+                                  type="button"
+                                  className="admin-card-action-btn"
+                                  style={{ background: "linear-gradient(135deg, rgba(255, 23, 68, 0.25), rgba(255, 183, 3, 0.2))", color: "#fff", border: "1px solid #ff1744" }}
+                                  onClick={() => openRepossessModal(b)}
+                                  title="Emergency Repossession & Cut Engine"
+                                >
+                                  🚨 Repossess
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                className="admin-card-action-btn view-btn"
+                                onClick={() => navigate(`/status?bookingId=${b.bookingId}`)}
+                              >
+                                🛰️ Telemetry
+                              </button>
+                            </div>
+                          </div>
                         );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+                      })
+                    )}
+                  </div>
+                ) : (
+                  <div className="custom-table-wrapper" style={{ marginTop: "15px" }}>
+                    <table className="custom-table">
+                      <thead>
+                        <tr>
+                          <th>Booking ID</th>
+                          <th>Driver / Customer</th>
+                          <th>Vehicle</th>
+                          <th>Schedule & Hub</th>
+                          <th>Total Fare</th>
+                          <th>Method</th>
+                          <th>Status</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredBookings.map((b) => {
+                          let statusClass = "status-paid";
+                          if (b.paymentStatus === "Active" || b.paymentStatus === "Approved") statusClass = "status-active";
+                          else if (b.paymentStatus === "Cancelled") statusClass = "status-cancelled";
+                          else if (b.paymentStatus === "Denied") statusClass = "status-denied";
+                          else if (b.paymentStatus?.includes("Repossessed") || b.paymentStatus?.includes("Terminated")) statusClass = "status-repossessed";
+
+                          const isRepossessable = !b.paymentStatus?.includes("Repossessed") && !b.paymentStatus?.includes("Denied") && b.paymentStatus !== "Cancelled";
+
+                          return (
+                            <tr key={b.bookingId}>
+                              <td><strong style={{ color: "var(--primary-cyan)" }}>{b.bookingId}</strong></td>
+                              <td>
+                                <div style={{ color: "#fff", fontWeight: 700 }}>{b.customerName}</div>
+                                <small style={{ color: "var(--text-muted)" }}>{b.phone || b.email}</small>
+                              </td>
+                              <td>{b.carName}</td>
+                              <td>
+                                <small style={{ color: "var(--text-secondary)" }}>{b.pickupDate} → {b.returnDate}</small>
+                                <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>{b.pickupLocation}</div>
+                              </td>
+                              <td><strong>{formatCurrency(b.totalAmount)}</strong></td>
+                              <td><small>{b.paymentMethod}</small></td>
+                              <td><span className={`status-badge ${statusClass}`}>{b.paymentStatus}</span></td>
+                              <td>
+                                <div className="action-btn-group">
+                                  {b.paymentStatus !== "Approved" && (
+                                    <button
+                                      type="button"
+                                      className="btn-action-icon"
+                                      title="Accept / Approve Order"
+                                      style={{ color: "var(--status-green)", borderColor: "rgba(0, 230, 118, 0.4)" }}
+                                      onClick={() => approveBooking(b.bookingId)}
+                                    >
+                                      ✓
+                                    </button>
+                                  )}
+                                  {b.paymentStatus !== "Denied" && (
+                                    <button
+                                      type="button"
+                                      className="btn-action-icon"
+                                      title="Deny / Reject Order"
+                                      style={{ color: "var(--primary-red)", borderColor: "rgba(255, 23, 68, 0.4)" }}
+                                      onClick={() => openDenyModal(b)}
+                                    >
+                                      ✕
+                                    </button>
+                                  )}
+                                  {isRepossessable && (
+                                    <button
+                                      type="button"
+                                      className="btn-action-icon"
+                                      title="Emergency Repossession & Cut Engine"
+                                      style={{ color: "#ffd700", borderColor: "rgba(255, 215, 0, 0.5)", background: "rgba(255, 23, 68, 0.15)" }}
+                                      onClick={() => openRepossessModal(b)}
+                                    >
+                                      🚨
+                                    </button>
+                                  )}
+                                  <button
+                                    type="button"
+                                    className="btn-action-icon"
+                                    title="Inspect Live Status API"
+                                    style={{ color: "var(--primary-cyan)", borderColor: "rgba(0, 242, 254, 0.4)" }}
+                                    onClick={() => navigate(`/status?bookingId=${b.bookingId}`)}
+                                  >
+                                    🛰️
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             </section>
           )}
@@ -1057,6 +1512,56 @@ export default function AdminPage() {
             <div className="modal-label">FLEET ADDITION</div>
             <h2>DEPLOY NEW VEHICLE</h2>
 
+            {/* QUICK PRESET PICKER */}
+            <div style={{ marginTop: "12px", marginBottom: "16px" }}>
+              <label style={{ fontSize: "12px", color: "var(--primary-cyan)" }}>⚡ Quick Presets (Auto-fill Spec)</label>
+              <select
+                style={{
+                  width: "100%",
+                  padding: "10px 14px",
+                  borderRadius: "10px",
+                  background: "rgba(0, 242, 254, 0.08)",
+                  border: "1px solid rgba(0, 242, 254, 0.3)",
+                  color: "#fff",
+                  fontSize: "13px",
+                  marginTop: "4px"
+                }}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === "defender") {
+                    setNewCarName("Land Rover Defender");
+                    setNewCarBrand("Land Rover");
+                    setNewCarCategory("Premium SUV");
+                    setNewCarPrice(4799);
+                    setNewCarHp("395 HP");
+                    setNewCarGear("8-Speed Auto");
+                    setNewCarImage("https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=1200&q=85");
+                  } else if (val === "m340i") {
+                    setNewCarName("BMW M340i xDrive");
+                    setNewCarBrand("BMW");
+                    setNewCarCategory("Sports Coupe");
+                    setNewCarPrice(4499);
+                    setNewCarHp("382 HP");
+                    setNewCarGear("8-Speed Steptronic");
+                    setNewCarImage("https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=1200&q=85");
+                  } else if (val === "cayman") {
+                    setNewCarName("Porsche 718 Cayman");
+                    setNewCarBrand("Porsche");
+                    setNewCarCategory("Supercar");
+                    setNewCarPrice(6499);
+                    setNewCarHp("350 HP");
+                    setNewCarGear("7-Speed PDK");
+                    setNewCarImage("https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1200&q=85");
+                  }
+                }}
+              >
+                <option value="">Choose a quick vehicle preset or enter custom below...</option>
+                <option value="defender">🚙 Land Rover Defender 110 (₹4,799 / day)</option>
+                <option value="m340i">🏎️ BMW M340i xDrive 382 HP (₹4,499 / day)</option>
+                <option value="cayman">💎 Porsche 718 Cayman GTS (₹6,499 / day)</option>
+              </select>
+            </div>
+
             <form onSubmit={handleAddCarSubmit} style={{ marginTop: "15px" }}>
               <label>Vehicle Name *</label>
               <input
@@ -1137,6 +1642,273 @@ export default function AdminPage() {
                 DEPLOY VEHICLE TO FLEET 🚀
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ORDER DENIAL MODAL */}
+      {denialModalOpen && selectedBookingForDeny && (
+        <div className="modal active" id="denyOrderModal">
+          <div className="modal-box" style={{ maxWidth: "460px" }}>
+            <button className="close" type="button" onClick={() => setDenialModalOpen(false)}>×</button>
+            <div className="modal-label" style={{ color: "var(--primary-red)" }}>ADMIN ACCESS • ORDER REJECTION</div>
+            <h2>DENY BOOKING ORDER</h2>
+
+            <div style={{ background: "rgba(255, 255, 255, 0.04)", border: "1px solid var(--border-color)", borderRadius: "12px", padding: "14px", margin: "14px 0" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
+                <span style={{ color: "var(--text-muted)", fontSize: "12px" }}>BOOKING ID</span>
+                <strong style={{ color: "var(--primary-cyan)" }}>{selectedBookingForDeny.bookingId}</strong>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
+                <span style={{ color: "var(--text-muted)", fontSize: "12px" }}>RENTER</span>
+                <strong style={{ color: "#fff" }}>{selectedBookingForDeny.customerName}</strong>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
+                <span style={{ color: "var(--text-muted)", fontSize: "12px" }}>CHARTER VEHICLE</span>
+                <strong style={{ color: "var(--accent-gold)" }}>{selectedBookingForDeny.carName}</strong>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: "var(--text-muted)", fontSize: "12px" }}>TOTAL CHARTER FARE</span>
+                <strong>{formatCurrency(selectedBookingForDeny.totalAmount)}</strong>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: "14px" }}>
+              <label style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase" }}>
+                Reason for Denial *
+              </label>
+              <select
+                style={{
+                  width: "100%",
+                  padding: "10px 14px",
+                  borderRadius: "10px",
+                  background: "var(--bg-input)",
+                  border: "1px solid var(--border-color)",
+                  color: "#fff",
+                  fontSize: "13px",
+                  marginTop: "6px"
+                }}
+                value={denialReason}
+                onChange={(e) => setDenialReason(e.target.value)}
+              >
+                <option value="Driver background / KYC verification declined">Driver background / KYC verification declined</option>
+                <option value="Security deposit payment declined by bank">Security deposit payment declined by bank</option>
+                <option value="Vehicle unavailable at hub due to urgent service">Vehicle unavailable at hub due to urgent service</option>
+                <option value="High fraud risk / Blacklisted renter profile">High fraud risk / Blacklisted renter profile</option>
+                <option value="Customer requested cancellation before dispatch">Customer requested cancellation before dispatch</option>
+              </select>
+            </div>
+
+            <div style={{ marginBottom: "16px" }}>
+              <label style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase" }}>
+                Internal Audit Notes (Optional)
+              </label>
+              <textarea
+                rows={2}
+                style={{
+                  width: "100%",
+                  padding: "10px 14px",
+                  borderRadius: "10px",
+                  background: "var(--bg-input)",
+                  border: "1px solid var(--border-color)",
+                  color: "#fff",
+                  fontSize: "13px",
+                  marginTop: "6px",
+                  resize: "vertical"
+                }}
+                placeholder="Log internal explanation for customer record..."
+                value={denialNotes}
+                onChange={(e) => setDenialNotes(e.target.value)}
+              />
+            </div>
+
+            <div style={{ background: "rgba(0, 242, 254, 0.06)", border: "1px dashed rgba(0, 242, 254, 0.3)", borderRadius: "10px", padding: "10px 14px", marginBottom: "20px", fontSize: "12px", color: "var(--text-secondary)" }}>
+              💡 <strong>Action effect:</strong> Vehicle <strong>{selectedBookingForDeny.carName}</strong> will immediately be restored to <strong>Available</strong> status in the Fleet inventory for other drivers.
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+              <button
+                type="button"
+                className="btn-agree-back"
+                onClick={() => setDenialModalOpen(false)}
+                style={{ padding: "12px", borderRadius: "10px", textAlign: "center" }}
+              >
+                DISMISS
+              </button>
+              <button
+                type="button"
+                className="confirm-button"
+                onClick={handleExecuteDeny}
+                style={{
+                  padding: "12px",
+                  background: "linear-gradient(135deg, #ff1744 0%, #b71c1c 100%)",
+                  boxShadow: "0 0 15px rgba(255, 23, 68, 0.4)",
+                  marginTop: 0
+                }}
+              >
+                🚫 CONFIRM DENIAL
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* EMERGENCY VEHICLE REPOSSESSION & MID-TRIP CANCELLATION MODAL */}
+      {repossessionModalOpen && selectedBookingForRepossess && (
+        <div className="modal active" id="repossessCarModal">
+          <div className="modal-box" style={{ maxWidth: "520px", border: "1.5px solid #ff1744", boxShadow: "0 0 40px rgba(255, 23, 68, 0.3)" }}>
+            <button className="close" type="button" onClick={() => setRepossessionModalOpen(false)}>×</button>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+              <span style={{ fontSize: "20px", animation: "pulse 1.2s infinite" }}>🚨</span>
+              <span className="modal-label" style={{ color: "#ff1744", letterSpacing: "1px" }}>
+                EMERGENCY FLEET INTERVENTION • REPOSSESSION PROTOCOL
+              </span>
+            </div>
+            <h2 style={{ fontSize: "22px", margin: "4px 0 10px" }}>CANCEL MID-TRIP & REPOSSESS</h2>
+
+            {/* LIVE TELEMETRY BREACH BOX */}
+            <div style={{ background: "rgba(255, 23, 68, 0.08)", border: "1px solid rgba(255, 23, 68, 0.35)", borderRadius: "12px", padding: "14px", margin: "14px 0" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                <div>
+                  <strong style={{ color: "#fff", fontSize: "15px" }}>{selectedBookingForRepossess.carName}</strong>
+                  <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>ID: {selectedBookingForRepossess.bookingId} • Plate: {selectedBookingForRepossess.carId}</div>
+                </div>
+                <span style={{ background: "rgba(255, 23, 68, 0.2)", border: "1px solid #ff1744", color: "#ff1744", padding: "4px 8px", borderRadius: "8px", fontSize: "11px", fontWeight: 800 }}>
+                  ● LIVE TRIP BREACH
+                </span>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", fontSize: "12px", borderTop: "1px solid rgba(255, 255, 255, 0.08)", paddingTop: "8px" }}>
+                <div>
+                  <span style={{ color: "var(--text-muted)" }}>Renter: </span>
+                  <strong style={{ color: "#fff" }}>{selectedBookingForRepossess.customerName}</strong>
+                </div>
+                <div>
+                  <span style={{ color: "var(--text-muted)" }}>Phone: </span>
+                  <strong style={{ color: "var(--primary-cyan)" }}>{selectedBookingForRepossess.phone || "+91 98450 11223"}</strong>
+                </div>
+                <div>
+                  <span style={{ color: "var(--text-muted)" }}>Live Telemetry Speed: </span>
+                  <strong style={{ color: "#ff1744" }}>214 KM/H ⚠️</strong>
+                </div>
+                <div>
+                  <span style={{ color: "var(--text-muted)" }}>GPS Location: </span>
+                  <strong style={{ color: "#fff" }}>Sector 4 Express Corridor</strong>
+                </div>
+              </div>
+            </div>
+
+            {/* REASON SELECTOR */}
+            <div style={{ marginBottom: "14px" }}>
+              <label style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase" }}>
+                Reason for Repossession / Miscellaneous Violation *
+              </label>
+              <select
+                style={{
+                  width: "100%",
+                  padding: "10px 14px",
+                  borderRadius: "10px",
+                  background: "var(--bg-input)",
+                  border: "1px solid var(--border-color)",
+                  color: "#fff",
+                  fontSize: "13px",
+                  marginTop: "6px"
+                }}
+                value={repossessReason}
+                onChange={(e) => setRepossessReason(e.target.value)}
+              >
+                <option value="Track Speeding / Reckless Driving Breach (>200 km/h detected)">
+                  ⚡ Track Speeding / Reckless Driving Breach (&gt;200 km/h detected)
+                </option>
+                <option value="Geofence Boundary Breach (Vehicle taken outside authorized territory)">
+                  🗺️ Geofence Boundary Breach (Vehicle taken outside authorized territory)
+                </option>
+                <option value="Unauthorized Third-Party Sub-Renting / Commercial Misconduct">
+                  🚫 Unauthorized Third-Party Sub-Renting / Commercial Misconduct
+                </option>
+                <option value="Telematics OBD-II Tampering / GPS Jammer Signal Detected">
+                  🛰️ Telematics OBD-II Tampering / GPS Jammer Signal Detected
+                </option>
+                <option value="Aggressive Launch Control Abuse / Dangerous Drifting Stunts">
+                  🛑 Aggressive Launch Control Abuse / Dangerous Drifting Stunts
+                </option>
+                <option value="Contractual Default / Serious Miscellaneous Violation">
+                  ⚠️ Contractual Default / Serious Miscellaneous Violation
+                </option>
+              </select>
+            </div>
+
+            <div style={{ marginBottom: "14px" }}>
+              <label style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase" }}>
+                Incident Description & Evidence Notes
+              </label>
+              <textarea
+                rows={2}
+                style={{
+                  width: "100%",
+                  padding: "10px 14px",
+                  borderRadius: "10px",
+                  background: "var(--bg-input)",
+                  border: "1px solid var(--border-color)",
+                  color: "#fff",
+                  fontSize: "13px",
+                  marginTop: "6px",
+                  resize: "vertical"
+                }}
+                placeholder="Log telemetry timestamp, radar evidence, or witness details..."
+                value={repossessNotes}
+                onChange={(e) => setRepossessNotes(e.target.value)}
+              />
+            </div>
+
+            {/* ENFORCEMENT CHECKBOXES */}
+            <div style={{ background: "rgba(0, 0, 0, 0.3)", border: "1px solid var(--border-color)", borderRadius: "10px", padding: "12px", marginBottom: "18px", display: "flex", flexDirection: "column", gap: "8px" }}>
+              <label style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", fontSize: "12.5px", color: "#fff", margin: 0 }}>
+                <input
+                  type="checkbox"
+                  checked={killEngineSignal}
+                  onChange={(e) => setKillEngineSignal(e.target.checked)}
+                  style={{ width: "16px", height: "16px", accentColor: "#ff1744" }}
+                />
+                <span>Transmit Remote Engine Immobilizer Kill-Signal (Cuts fuel pump & ignition)</span>
+              </label>
+              <label style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", fontSize: "12.5px", color: "#fff", margin: 0 }}>
+                <input
+                  type="checkbox"
+                  checked={forfeitDeposit}
+                  onChange={(e) => setForfeitDeposit(e.target.checked)}
+                  style={{ width: "16px", height: "16px", accentColor: "#ff1744" }}
+                />
+                <span>Forfeit Security Deposit (₹{selectedBookingForRepossess.securityDeposit || 5000}) for violation fine</span>
+              </label>
+              <div style={{ fontSize: "11.5px", color: "var(--status-green)", paddingLeft: "26px" }}>
+                ✓ Vehicle will automatically be reclaimed and returned to <strong>Available</strong> fleet inventory.
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+              <button
+                type="button"
+                className="btn-agree-back"
+                onClick={() => setRepossessionModalOpen(false)}
+                style={{ padding: "12px", borderRadius: "10px", textAlign: "center" }}
+              >
+                ABORT
+              </button>
+              <button
+                type="button"
+                className="confirm-button"
+                onClick={handleExecuteRepossess}
+                style={{
+                  padding: "12px",
+                  background: "linear-gradient(135deg, #d50000 0%, #ff1744 100%)",
+                  boxShadow: "0 0 20px rgba(255, 23, 68, 0.6)",
+                  marginTop: 0,
+                  fontWeight: 900
+                }}
+              >
+                🚨 EXECUTE ENGINE KILL & REPOSSESS
+              </button>
+            </div>
           </div>
         </div>
       )}

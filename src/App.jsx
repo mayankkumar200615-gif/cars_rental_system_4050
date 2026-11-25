@@ -19,6 +19,7 @@ import AdminPage from "./pages/AdminPage";
 import MyBookingsPage from "./pages/MyBookingsPage";
 import WishlistPage from "./pages/WishlistPage";
 import StatusTrackerPage from "./pages/StatusTrackerPage";
+import HelpCenterPage from "./pages/HelpCenterPage";
 
 function MainApp() {
   const location = useLocation();
@@ -63,6 +64,8 @@ function MainApp() {
         <Route path="/status" element={<StatusTrackerPage />} />
         <Route path="/track" element={<StatusTrackerPage />} />
         <Route path="/wishlist" element={<WishlistPage />} />
+        <Route path="/help" element={<HelpCenterPage />} />
+        <Route path="/help-center" element={<HelpCenterPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/admin" element={<AdminPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />

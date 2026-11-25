@@ -358,6 +358,52 @@ export default function StatusTrackerPage() {
             </div>
           )}
 
+          {/* REPOSSESSION OR DENIAL LIVE NOTICE */}
+          {statusData.booking?.breachReason && (
+            <div style={{
+              background: "linear-gradient(135deg, rgba(255, 23, 68, 0.2) 0%, rgba(138, 43, 226, 0.2) 100%)",
+              border: "2px solid #ff1744",
+              borderRadius: "18px",
+              padding: "20px 24px",
+              boxShadow: "0 0 25px rgba(255, 23, 68, 0.35)"
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
+                <span style={{ fontSize: "24px" }}>🚨</span>
+                <h3 style={{ margin: 0, color: "#ff1744", fontSize: "18px", fontWeight: 900 }}>
+                  MISSION TERMINATED • REMOTE ENGINE IMMOBILIZED & VEHICLE REPOSSESSED
+                </h3>
+              </div>
+              <p style={{ margin: "0 0 8px", color: "#fff", fontSize: "14px" }}>
+                Fleet Admin executed an emergency mid-trip intervention. The engine kill-switch was transmitted and the vehicle has been reclaimed to the regional hub.
+              </p>
+              <div style={{ background: "rgba(0,0,0,0.4)", borderRadius: "10px", padding: "10px 14px", fontSize: "13px", color: "#ffd700" }}>
+                <strong>Incident Cause / Violation:</strong> {statusData.booking.breachReason}
+              </div>
+            </div>
+          )}
+
+          {statusData.booking?.denialReason && (
+            <div style={{
+              background: "rgba(255, 23, 68, 0.12)",
+              border: "1.5px solid #ff1744",
+              borderRadius: "18px",
+              padding: "20px 24px"
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
+                <span style={{ fontSize: "24px" }}>🚫</span>
+                <h3 style={{ margin: 0, color: "#ff1744", fontSize: "18px", fontWeight: 800 }}>
+                  ORDER DENIED BY FLEET ADMIN
+                </h3>
+              </div>
+              <p style={{ margin: "0 0 8px", color: "var(--text-secondary)", fontSize: "14px" }}>
+                This booking request was denied by administrative control. Security hold and full fare refund have been processed back to your original payment method.
+              </p>
+              <div style={{ background: "rgba(0,0,0,0.4)", borderRadius: "10px", padding: "10px 14px", fontSize: "13px", color: "#ff3366" }}>
+                <strong>Denial Reason:</strong> {statusData.booking.denialReason}
+              </div>
+            </div>
+          )}
+
           {/* 5-STAGE PROGRESS TIMELINE */}
           <div style={{
             background: "var(--bg-card)",
